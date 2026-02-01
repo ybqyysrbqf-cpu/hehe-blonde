@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Special Page</title>
+<style>
+  body { background-color: #ffe4e1; font-family: 'Comic Sans MS', cursive; text-align:center; padding:20px; overflow-x:hidden; position:relative; }
+  #startBtn, #yesBtn, #noBtn, #restartBtn { padding:15px 30px; font-size:24px; margin:20px; border:none; border-radius:12px; cursor:pointer; transition:all 0.3s ease; position:relative;}
+  #yesBtn { background-color:#ffb6c1; transform:scale(1); }
+  #noBtn { background-color:#add8e6; }
+  #restartBtn { display:none; background-color:#90ee90; }
+  #message { font-size:22px; margin:20px; }
+  #catImage { margin-top:20px; width:250px; height:250px; border-radius:15px; display:none; }
+  #catExplosion { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
+  .explodingCat { position:absolute; width:80px; height:80px; transition:all 3s ease; }
+</style>
+</head>
+<body>
+
+<h1>Hey Akumla 👋</h1>
+
+<div id="questionDiv" style="display:none;">
+  <p id="message">Can I be your boyfriend?</p>
+  <button id="yesBtn">Yes</button>
+  <button id="noBtn">No</button>
+</div>
+
+<button id="startBtn">Start</button>
+<img id="catImage" src="" alt="">
+<div id="catExplosion"></div>
+
+<audio id="audioPlayer" loop></audio>
+<audio id="yesAudio"></audio>
+
+<script>
+let noCount = 0;
+let noDodged = false;
+let yesScale = 1;
+let startAudioPlaying = false;
+
+const noMessages = [
+  "Lemme ask you again 🥺",
+  "Are you sure Akumla? if you say yes i’ll make cute edits of you 🥺",
+  "Are you sure no?",
+  "No I long for you Akumla 😭",
+  "You know how much I like you Akumla? Think again",
+  "No I won’t let you go 😒",
+  "Say yes 😋",
+  "I don’t care say yes noww 😗",
+  "Say yes already blonde 👱🏻‍♀️😒",
+  "I’m not tired! Are you? Lets start over hehe 😈"
+];
+
+const extraMessages = [
+  "I can’t stop thinking about you 🥰",
+  "Talking about cheating? I would never do that 😌",
+  "I’ll only have eyes on you 💙"
+];
+
+const startBtn = document.getElementById('startBtn');
+const questionDiv = document.getElementById('questionDiv');
+const message = document.getElementById('message');
+const yesBtn = document.getElementById('yesBtn');
+const noBtn = document.getElementById('noBtn');
+const catImage = document.getElementById('catImage');
+const audioPlayer = document.getElementById('audioPlayer');
+const yesAudio = document.getElementById('yesAudio');
+const catExplosion = document.getElementById('catExplosion');
+const restartBtn = document.createElement('button');
+
+restartBtn.id = 'restartBtn';
+restartBtn.innerText = "Let's start over";
+document.body.appendChild(restartBtn);
+
+// Start page
+startBtn.onclick = async () => {
+  startBtn.style.display = "none";
+  questionDiv.style.display = "block";
+  audioPlayer.src = './startSong.mp3';
+  audioPlayer.currentTime = 1;
+  try { await audioPlayer.play(); } catch(e){ console.log("Audio blocked:",e); }
+  startAudioPlaying = true;
+  showRandomCat();
+  startYesBounce();
+};
+
+// Yes click
+yesBtn.onclick = () => {
+  audioPlayer.pause();
+  yesAudio.src = './yesSong.mp3';
+  yesAudio.currentTime = 40;
+  yesAudio.play();
+  message.innerText = "Yay! Thank you Akumla 😄 " + extraMessages.join(' 💙 ');
+  yesBtn.style.backgroundColor = "#32cd32";
+  yesBtn.style.transform = `scale(${yesScale})`;
+  createCatExplosion(50);
+  alert("Send this to me: OK YES IDIOT");
+};
+
+// Yes hover wiggle
+yesBtn.addEventListener('mouseenter', ()=>{
+  yesBtn.style.transform = `rotate(-10deg) scale(${yesScale})`;
+  setTimeout(()=>{yesBtn.style.transform=`rotate(10deg) scale(${yesScale})`;},100);
+  setTimeout(()=>{yesBtn.style.transform=`rotate(0deg) scale(${yesScale})`;},200);
+});
+
+// Yes subtle bounce
+function startYesBounce(){
+  setInterval(()=>{
+    yesBtn.style.transform = `translateY(-10px) scale(${yesScale})`;
+    setTimeout(()=>{yesBtn.style.transform = `translateY(0px) scale(${yesScale})`;},300);
+  },3000);
+}
+
+// No click
+noBtn.onclick = () => {
+  noCount++;
+  if(noCount <= 10){
+    let msg = noMessages[noCount-1];
+    if(noCount >= 4 && noCount <= 6) msg += " 💭 " + extraMessages[noCount%extraMessages.length];
+    message.innerText = msg;
+
+    yesScale += 0.1;
+    yesBtn.style.transform = `scale(${yesScale})`;
+    showRandomCat();
+
+    if(noCount === 2) playPartialSong('./noSong1.mp3',32,112);
+    else if(noCount === 5) playPartialSong('./noSong2.mp3',1,30);
+    else if(noCount === 7) playPartialSong('./noSong3.mp3',1,30);
+    else if(noCount === 10) playPartialSong('./noSong3.mp3',260,285);
+
+    const maxX = window.innerWidth - noBtn.offsetWidth - 20;
+    const maxY = window.innerHeight - noBtn.offsetHeight - 20;
+    const randX = Math.floor(Math.random()*maxX);
+    const randY = Math.floor(Math.random()*maxY);
+    noBtn.style.position = "absolute";
+    noBtn.style.left = randX + "px";
+    noBtn.style.top = randY + "px";
+  }
+  if(noCount === 10) restartBtn.style.display = "inline-block";
+};
+
+// No one-time dodge
+noBtn.addEventListener('mouseenter',()=>{
+  if(!noDodged){
+    const maxX = window.innerWidth - noBtn.offsetWidth - 20;
+    const maxY = window.innerHeight - noBtn.offsetHeight - 20;
+    const randX = Math.floor(Math.random()*maxX);
+    const randY = Math.floor(Math.random()*maxY);
+    noBtn.style.position = "absolute";
+    noBtn.style.left = randX + "px";
+    noBtn.style.top = randY + "px";
+    noDodged = true;
+  }
+});
+
+// Restart
+restartBtn.onclick = () => {
+  noCount=0; yesScale=1;
+  message.innerText = "Can I be your boyfriend?";
+  yesBtn.style.backgroundColor="#ffb6c1";
+  yesBtn.style.transform="scale(1)";
+  restartBtn.style.display="none";
+  noBtn.style.position="relative"; noBtn.style.left="0"; noBtn.style.top="0";
+  noDodged=false;
+  showRandomCat();
+  if(!startAudioPlaying) { audioPlayer.src = './startSong.mp3'; audioPlayer.currentTime=1; audioPlayer.play(); startAudioPlaying=true; }
+};
+
+// Partial song for No clicks
+function playPartialSong(file,startSec,endSec){
+  const tempAudio = new Audio(file);
+  tempAudio.currentTime = startSec;
+  tempAudio.play();
+  if(endSec){
+    const interval = setInterval(()=>{
+      if(tempAudio.currentTime>=endSec){ tempAudio.pause(); clearInterval(interval); }
+    },200);
+  }
+}
+
+// Show random cat
+function showRandomCat(){
+  const catUrls = [
+    "https://cataas.com/cat/says/Hi%20Akumla!",
+    "https://cataas.com/cat/cute",
+    "https://cataas.com/cat/kitten",
+    "https://cataas.com/cat/funny",
+    "https://cataas.com/cat/sleepy"
+  ];
+  const rand = catUrls[Math.floor(Math.random()*catUrls.length)];
+  catImage.src = rand;
+  catImage.style.display = "block";
+}
+
+// Cat explosion
+function createCatExplosion(number){
+  for(let i=0;i<number;i++){
+    const cat = document.createElement('img');
+    const catUrls = [
+      "https://cataas.com/cat/cute",
+      "https://cataas.com/cat/kitten",
+      "https://cataas.com/cat/funny",
+      "https://cataas.com/cat/sleepy"
+    ];
+    cat.src = catUrls[Math.floor(Math.random()*catUrls.length)];
+    cat.className="explodingCat";
+    cat.style.left = Math.random()*window.innerWidth + "px";
+    cat.style.top = Math.random()*window.innerHeight + "px";
+    cat.style.transform = `scale(${Math.random()*0.8+0.5}) rotate(${Math.random()*360}deg)`;
+    catExplosion.appendChild(cat);
+    setTimeout(()=>{
+      cat.style.top = Math.random()*window.innerHeight + "px";
+      cat.style.left = Math.random()*window.innerWidth + "px";
+    },50);
+  }
+}
+</script>
+</body>
+</html>
